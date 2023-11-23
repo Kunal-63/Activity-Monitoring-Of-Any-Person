@@ -25,6 +25,7 @@ class _DataScreenState extends State<DataScreen> {
   bool isLoading = true;
   String errorMessage = '';
 
+
   Future<void> fetchData() async {
     try {
       final response = await http
@@ -52,7 +53,9 @@ class _DataScreenState extends State<DataScreen> {
           .get(Uri.parse('http://192.168.15.75:5200/following-count'));
 
       final response8 =
-          await http.get(Uri.parse('http://192.168.15.75:5200/post-picture'));
+          await http.get(Uri.parse('http://192.168.15.75:5200/urls'));
+
+      
 
       if (response.statusCode == 200) {
         setState(() {
@@ -67,7 +70,8 @@ class _DataScreenState extends State<DataScreen> {
           dict8 = json.decode(response8.body);
 
           profileURL = dict3['profile_path'];
-          profileURL1 = dict8['post_path'];
+          profileURL1=dict8['urls'];
+        
 
           isLoading = false;
         });
@@ -391,13 +395,41 @@ class _DataScreenState extends State<DataScreen> {
                             ]),
                 ), // Your content for this section
               ),
-              Container(
-                color: Color.fromRGBO(211, 211, 211, 1),
-                width: 200, // Set your desired width
-                height: 300, // Set your desired height
-
-                child: Image(image: AssetImage('$profileURL1')),
-              ), // Your content              ),
+             
+              FutureBuilder(
+          future: fetchData(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              Map<String, String> imageUrls =snapshot.data as Map<String, String>;
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: imageUrls.length,
+                itemBuilder: (context, index) {
+                  String imageKey = imageUrls.keys.elementAt(index);
+                  String imageUrl = profileURL1;
+                  return Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Image.network(
+                          imageUrl,
+                          width: 100.0, // Adjust the width as needed
+                          height: 100.0, // Adjust the height as needed
+                          fit: BoxFit.cover,
+                        ),
+                        Text(imageKey),
+                      ],
+                    ),
+                  );
+                },
+              );
+            }
+          },
+        ),// Your content              ),
             ]),
           )
         ]),
